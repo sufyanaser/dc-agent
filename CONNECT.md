@@ -74,7 +74,19 @@ https://dc-custom-relay.sufianaser.workers.dev/mcp/figwright
 
 ## تثبيت الوكيل على الجهاز
 
-التحميل من صفحة Releases في المستودع `sufyanaser/dc-agent`. ملفات التنصيب لا تحتوي التوكن: أول تنصيب على كل كمبيوتر يطلب منك لصق توكن الجهاز مرة واحدة، وأي تحديث بعدها لا يسأل.
+**بأمر واحد** (يحتاج GitHub CLI مسجّل الدخول: `gh auth login`):
+
+ويندوز، في PowerShell:
+```powershell
+gh api repos/sufyanaser/dc-agent/contents/install.ps1 -H "Accept: application/vnd.github.raw" | Out-String | iex
+```
+
+ماك، في Terminal (لم يُختبر على ماك):
+```bash
+gh api repos/sufyanaser/dc-agent/contents/install.sh -H "Accept: application/vnd.github.raw" | bash
+```
+
+أو يدوياً من صفحة Releases في المستودع `sufyanaser/dc-agent`. ملفات التنصيب لا تحتوي التوكن: أول تنصيب على كل كمبيوتر يطلب منك لصق توكن الجهاز مرة واحدة، وأي تحديث بعدها لا يسأل.
 
 - **ويندوز:** شغّل `dc-custom-setup.exe` بنقرة مزدوجة والصق التوكن، فتظهر رسالة "installed and running in the background" ولا تظهر أي نافذة بعدها. يشتغل تلقائياً مع كل تسجيل دخول. للإزالة: Settings ← Apps ← dc-custom ← Uninstall.
 - **ماك:** افتح `dc-custom.app` بنقرة مزدوجة، فينسخ نفسه إلى `~/Applications` ويشتغل في الخلفية بدون أيقونة في الـ Dock.

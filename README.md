@@ -34,6 +34,24 @@ The PC dials out, so nothing listens on your network. The Worker is the trust bo
 
 Every policy field is in `device/config.example.json`. Change the profile without rebuilding anything: edit `config.json`, restart the agent.
 
+## Install with one command
+
+Needs GitHub CLI signed in to an account that can read this private repo (`gh auth login`).
+
+Windows (PowerShell):
+
+```powershell
+gh api repos/sufyanaser/dc-agent/contents/install.ps1 -H "Accept: application/vnd.github.raw" | Out-String | iex
+```
+
+macOS (Terminal):
+
+```bash
+gh api repos/sufyanaser/dc-agent/contents/install.sh -H "Accept: application/vnd.github.raw" | bash
+```
+
+Both download the latest release and run it. The first install on a computer asks for the device token once; later runs upgrade in place without asking.
+
 ## Releases
 
 Pushing a tag `v*` runs `.github/workflows/release.yml`: it tests the agent, builds `dc-custom-setup.exe` on Windows and `dc-custom.app` (arm64 + x64) on macOS, and publishes them as a GitHub release. These are **public builds**: no device token inside; the first install on each computer asks for it. Local private builds (token embedded) are still possible with the commands below.
