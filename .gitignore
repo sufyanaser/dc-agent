@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.wrangler/
+.dev.vars
+.dev.vars.*
+config.json
+audit.jsonl
+*.log
+New Text Document*.txt
+*.blob
+.superpowers/

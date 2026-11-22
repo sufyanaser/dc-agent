@@ -1,0 +1,26 @@
+{
+  "name": "dc-custom-relay",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Cloudflare Workers relay: public MCP endpoint for ChatGPT, OAuth via GitHub, device tunnel via Durable Objects",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test test/"
+  },
+  "dependencies": {
+    "@cloudflare/workers-oauth-provider": "^1.2.4",
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "agents": "^0.34.0",
+    "hono": "^4.13.20",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261121.1",
+    "@types/node": "^26.6.6",
+    "typescript": "^7.0.2",
+    "wrangler": "^4.166.0"
+  }
+}

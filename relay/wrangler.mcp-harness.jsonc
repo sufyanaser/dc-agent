@@ -1,0 +1,9 @@
+{
+  "name": "dc-custom-mcp-harness",
+  "main": "test/harness/mcp-harness.ts",
+  "compatibility_date": "2025-10-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "durable_objects": { "bindings": [{ "name": "DEVICE_HUB", "class_name": "DeviceHub" }] },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["DeviceHub"] }],
+  "vars": { "ALLOWED_GITHUB_LOGIN": "tester", "PUBLIC_ORIGIN": "https://dc-custom-relay.workers.dev" }
+}

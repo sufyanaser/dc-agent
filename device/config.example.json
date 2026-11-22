@@ -1,0 +1,18 @@
+{
+  "relayUrl": "wss://dc-custom-relay.YOUR-SUBDOMAIN.workers.dev/device",
+  "deviceToken": "SET_BY_INSTALL_OR_ENV_DC_DEVICE_TOKEN",
+  "deviceId": "MY-PC",
+  "policy": {
+    "profile": "scoped",
+    "allowedRoots": ["C:\\Users\\YOU\\Projects"],
+    "denyPatterns": [],
+    "commandPolicy": "allowlist",
+    "commandAllowlist": ["git", "npm", "npx", "node", "python", "dir", "Get-ChildItem", "Get-Content"],
+    "requireApprovalFor": ["write", "delete", "move", "exec", "kill"],
+    "approvalMode": "console",
+    "approvalTimeoutSec": 120,
+    "auditLog": "C:\\Users\\YOU\\AppData\\Local\\dc-custom\\audit.jsonl",
+    "auditContent": false,
+    "maxOutputBytes": 1000000
+  }
+}

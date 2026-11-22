@@ -1,0 +1,14 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "dc-custom-relay",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-10-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "durable_objects": {
+    "bindings": [{ "name": "DEVICE_HUB", "class_name": "DeviceHub" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["DeviceHub"] }],
+  "kv_namespaces": [{ "binding": "OAUTH_KV", "id": "9ddb40398341416ea4f4286586dbeb53" }],
+  "vars": { "ALLOWED_GITHUB_LOGIN": "sufyanaser", "PUBLIC_ORIGIN": "https://dc-custom-relay.sufianaser.workers.dev" },
+  "observability": { "enabled": true }
+}

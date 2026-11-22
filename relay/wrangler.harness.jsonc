@@ -1,0 +1,8 @@
+{
+  "name": "dc-custom-harness",
+  "main": "test/harness/harness.ts",
+  "compatibility_date": "2025-10-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "durable_objects": { "bindings": [{ "name": "DEVICE_HUB", "class_name": "DeviceHub" }] },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["DeviceHub"] }]
+}

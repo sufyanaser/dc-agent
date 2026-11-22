@@ -1,0 +1,101 @@
+# Builds the one-file installers on real Windows and macOS machines and publishes them as a GitHub release.
+# Installers are PUBLIC builds: they contain the relay address but no device token; each install asks for it.
+name: Build installers and release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+env:
+  DC_RELAY_URL: wss://dc-custom-relay.sufianaser.workers.dev/device
+  DC_PUBLIC_BUILD: "1"
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Agent tests
+        working-directory: device
+        run: |
+          npm ci --no-audit --no-fund
+          npm test
+      - name: Build dc-custom-setup.exe
+        run: node scripts/build-windows.mjs
+      - name: Check the exe (GUI subsystem, icon, version, no token)
+        run: node --test scripts/test/build-windows.test.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: dist/dc-custom-setup.exe
+          if-no-files-found: error
+
+  macos:
+    strategy:
+      matrix:
+        arch: [arm64, x64]
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Build dc-custom.app (${{ matrix.arch }})
+        env:
+          NODE_ARCH: ${{ matrix.arch }}
+        run: bash scripts/build-mac.sh
+      - name: Check the app starts and reads its embedded config (Apple Silicon runner)
+        if: matrix.arch == 'arm64'
+        run: |
+          export DC_HOME="$RUNNER_TEMP/dc-home"
+          export DC_DEVICE_TOKEN="ci-check-token-not-real-0123456789abcdef"
+          mkdir -p "$DC_HOME"
+          dist/dc-custom.app/Contents/MacOS/dc-custom --check | tee "$RUNNER_TEMP/check.json"
+          grep -q '"relayUrl": "wss://dc-custom-relay' "$RUNNER_TEMP/check.json"
+          codesign --verify --deep --strict dist/dc-custom.app
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mac-${{ matrix.arch }}
+          path: dist/dc-custom-mac-${{ matrix.arch }}.zip
+          if-no-files-found: error
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [windows, macos]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: out
+          merge-multiple: true
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ls -la out
+          gh release create "$GITHUB_REF_NAME" \
+            out/dc-custom-setup.exe out/dc-custom-mac-arm64.zip out/dc-custom-mac-x64.zip \
+            --repo "$GITHUB_REPOSITORY" --title "dc-custom $GITHUB_REF_NAME" --notes "$(cat <<'EOF'
+          ## Downloads
+          - **Windows:** `dc-custom-setup.exe`. Double-click it, paste your device token once, and it runs hidden and starts at every login.
+          - **Mac (Apple Silicon M1/M2/M3/M4):** `dc-custom-mac-arm64.zip`
+          - **Mac (Intel):** `dc-custom-mac-x64.zip`
+
+          Unzip it, open `dc-custom.app`, and paste your device token once.
+
+          The installers contain no token: each computer asks for it on its first install.
+
+          ## Connect your AI tools
+          - Computer tools: `https://dc-custom-relay.sufianaser.workers.dev/mcp`
+          - Figwright (Figma): `https://dc-custom-relay.sufianaser.workers.dev/mcp/figwright`. Needs Figwright installed (`figwright-mcp`) and the Figwright plugin open in Figma on that computer.
+
+          Sign in with GitHub. See CONNECT.md.
+          EOF
+          )"
