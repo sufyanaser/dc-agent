@@ -60,6 +60,43 @@ else
 end if
 `;
 
+/** How long the token box and installer notices wait before giving up (no visible desktop, nobody there). */
+export const TOKEN_PROMPT_TIMEOUT_MS = 5 * 60_000;
+export const NOTICE_TIMEOUT_MS = 2 * 60_000;
+
+export interface DialogResult {
+  code: number | null;
+  out: string;
+  timedOut: boolean;
+}
+
+/**
+ * Runs a dialog process and kills it after `timeoutMs`. A window drawn where nobody can see it
+ * (an installer started from a sandboxed agent, a service session) would otherwise wait forever.
+ */
+export function runDialog(file: string, args: string[], env: NodeJS.ProcessEnv, timeoutMs: number): Promise<DialogResult> {
+  return new Promise((resolve) => {
+    let out = "";
+    let timedOut = false;
+    let done = false;
+    const finish = (code: number | null) => {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      resolve({ code, out, timedOut });
+    };
+    const child = spawn(file, args, { env, windowsHide: true, stdio: ["ignore", "pipe", "ignore"] });
+    const timer = setTimeout(() => {
+      timedOut = true;
+      child.kill();
+      finish(null);
+    }, timeoutMs);
+    child.stdout?.on("data", (b: Buffer) => (out += b.toString("utf8")));
+    child.on("error", () => finish(null));
+    child.on("close", (code) => finish(code));
+  });
+}
+
 /** Icon file installed next to the config (`icon.ico` on Windows, `icon.icns` on macOS), or "" if absent. */
 function iconFile(): string {
   const file = path.join(dcHome(), process.platform === "win32" ? "icon.ico" : "icon.icns");
@@ -160,11 +197,7 @@ export function showNotice(title: string, text: string, kind: "info" | "error"):
   } else {
     return Promise.resolve();
   }
-  return new Promise<void>((resolve) => {
-    const child = spawn(file, args, { env, windowsHide: true, stdio: "ignore" });
-    child.on("error", () => resolve());
-    child.on("close", () => resolve());
-  });
+  return runDialog(file, args, env, NOTICE_TIMEOUT_MS).then(() => undefined);
 }
 
 const TOKEN_WINDOWS_SCRIPT = `
@@ -212,8 +245,8 @@ end if
 return text returned of r
 `;
 
-/** Masked input box for the device token. Resolves the typed text, or null if cancelled or unavailable. */
-export function showTokenPrompt(): Promise<string | null> {
+/** Masked input box for the device token. Resolves the typed text, or null if cancelled, unavailable or timed out. */
+export function showTokenPrompt(timeoutMs = TOKEN_PROMPT_TIMEOUT_MS): Promise<string | null> {
   const env = { ...process.env, DC_APPROVE_ICON: iconFile() };
   let file: string;
   let args: string[];
@@ -227,11 +260,5 @@ export function showTokenPrompt(): Promise<string | null> {
   } else {
     return Promise.resolve(null);
   }
-  return new Promise((resolve) => {
-    let out = "";
-    const child = spawn(file, args, { env, windowsHide: true, stdio: ["ignore", "pipe", "ignore"] });
-    child.stdout.on("data", (b: Buffer) => (out += b.toString("utf8")));
-    child.on("error", () => resolve(null));
-    child.on("close", (code) => resolve(code === 0 && out.trim() ? out.trim() : null));
-  });
+  return runDialog(file, args, env, timeoutMs).then((r) => (r.code === 0 && r.out.trim() ? r.out.trim() : null));
 }

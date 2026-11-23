@@ -84,7 +84,11 @@ export async function install(ops: PlatformOps, opts: InstallOptions = {}): Prom
     // A private build embeds the token; a public build asks for it once (or reads DC_DEVICE_TOKEN for automation).
     const token = (embedded.deviceToken || process.env.DC_DEVICE_TOKEN || (await ops.promptToken()) || "").trim();
     if (token.length < MIN_TOKEN) {
-      return fail("No valid device token was given, so nothing was installed. Run the installer again and paste the token.", false);
+      return fail(
+        "No valid device token was given, so nothing was installed. Run the installer again and paste the token. " +
+          "If no token window appeared, start the installer from your own desktop session, not from a sandboxed tool.",
+        false,
+      );
     }
     newConfig = {
       relayUrl: embedded.relayUrl,
